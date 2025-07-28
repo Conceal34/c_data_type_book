@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-book: Data Types and Variables in C</title>
+    <style>
+        /* Font Imports */
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=IBM+Plex+Sans:wght@400;700&family=JetBrains+Mono&display=swap');
+
+        /* Base Styles */
+        body {
+            margin: 0;
+            font-family: 'IBM Plex Sans', sans-serif;
+            background-color: #f5f5f5;
+            color: #001f3f;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow: hidden; /* Hide body scrollbar as ebook-wrapper handles height */
+            background-image:
+                linear-gradient(rgba(0, 31, 63, 0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 31, 63, 0.06) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        /* E-book Wrapper */
+        .ebook-wrapper {
+            width: 100%;
+            max-width: 900px;
+            height: 85vh; /* Adjusted height to fit content and navigation */
+            perspective: 2000px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        /* Page Styling */
+        .ebook-page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            overflow-y: auto; /* Allows scrolling within a page if content is too long */
+            padding: 40px;
+            padding-bottom: 50px; /* Extra space for page number */
+            box-sizing: border-box;
+            border-top: 5px solid #001f3f;
+            transform-style: preserve-3d;
+            transform-origin: left center;
+            transition: transform 0.6s ease-in-out;
+            backface-visibility: hidden;
+            background-image: repeating-linear-gradient(-45deg, 
+                transparent, 
+                transparent 15px, 
+                rgba(0, 31, 63, 0.02) 15px, 
+                rgba(0, 31, 63, 0.02) 16px
+            );
+        }
+
+        /* Webkit Scrollbar Styling for Pages */
+        .ebook-page::-webkit-scrollbar {
+            width: 8px;
+        }
+        .ebook-page::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .ebook-page::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        .ebook-page::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .ebook-page.flipped {
+            transform: rotateY(-180deg);
+        }
+        
+        /* Page Number Style - REVERTED */
+        .page-number {
+            position: absolute; /* Reverted from sticky to absolute */
+            bottom: 20px;
+            right: 30px;
+            font-size: 0.8em;
+            color: #888;
+            /* Removed background-color, padding, border-radius, box-shadow, z-index */
+        }
+
+        /* Cover & Back Cover Styles */
+        .cover-page, .back-cover {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background-image: none; /* Remove diagonal lines for covers */
+        }
+        #page-0 { background-color: #001f3f; color: #ffffff; }
+        .cover-title { font-family: 'Montserrat', sans-serif; font-size: 3em; margin-bottom: 10px; }
+        .cover-subtitle { font-size: 1.5em; color: #f0f0f0; margin-bottom: 20px; } /* Changed color for contrast */
+        .cover-author { font-style: italic; color: #ccc; } /* Changed color for contrast */
+        #page-9 { background-color: #f0f0f0; } /* Back cover updated page ID */
+        .back-cover h2 { color: #001f3f; border-bottom: none; }
+
+        /* Typography */
+        h1, h2, h3 {
+            font-family: 'Montserrat', sans-serif;
+            line-height: 1.3;
+            transition: text-shadow 0.3s ease;
+        }
+        h1 { font-size: 2.2em; color: #FF6B6B; margin-bottom: 20px; }
+        h2 { font-size: 1.6em; color: #001f3f; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; margin-top: 30px; }
+        h3 { font-size: 1.3em; color: #001f3f; margin-top: 25px; }
+        p, li { line-height: 1.7; margin-bottom: 10px; }
+
+        /* Table of Contents specific styling */
+        #page-1 ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+        #page-1 ul li {
+            margin-bottom: 10px;
+        }
+        #page-1 ul li a {
+            text-decoration: none;
+            color: #001f3f;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: color 0.3s ease, transform 0.2s;
+            display: inline-block; /* Allows transform */
+        }
+        #page-1 ul li a:hover {
+            color: #FF6B6B;
+            transform: translateX(5px);
+        }
+
+        /* Depth Hover Effect on Headings */
+        h1:hover, h2:hover, h3:hover {
+            text-shadow: 0px 1px 1px rgba(0,0,0,0.1), 0px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Code Blocks */
+        .code-block {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-size: 0.9em;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: box-shadow 0.3s ease;
+        }
+
+        /* Depth Hover Effect on Code Blocks */
+        .code-block:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1), 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        /* Sidebar "DIY" Sections */
+        .sidebar {
+            background-color: #f0f8ff; /* Lighter background for DIY */
+            border-left: 4px solid #FF6B6B;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+            font-size: 0.95em;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .sidebar-title { font-family: 'Montserrat', sans-serif; font-weight: 700; color: #FF6B6B; margin: 0 0 10px 0; }
+
+        /* Hover Effect on DIY Sections */
+        .sidebar:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+
+        /* Navigation */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 900px;
+        }
+        .nav-button {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #001f3f;
+            color: #ffffff;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 700;
+            transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+        }
+        
+        /* Depth Hover Effect on Buttons */
+        .nav-button:hover:not(:disabled) {
+            background-color: #FF6B6B;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        .nav-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.5;
+            box-shadow: none;
+        }
+
+        /* --- QUIZ SPECIFIC STYLES --- */
+        .quiz-question {
+            background-color: #f0f8ff; /* Light blue background */
+            border: 1px solid #cceeff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            position: relative; /* For feedback icons */
+        }
+
+        .quiz-question p {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #003366; /* Darker blue for question text */
+        }
+
+        .quiz-question label {
+            display: block; /* Make each radio option on a new line */
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+
+        .quiz-question input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: 'IBM Plex Sans', sans-serif;
+        }
+        
+        /* Quiz feedback specific to questions */
+        .quiz-question .feedback-icon {
+            font-size: 1.2em;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        .quiz-question .feedback-icon.correct { color: #28a745; } /* Green checkmark */
+        .quiz-question .feedback-icon.incorrect { color: #dc3545; } /* Red X */
+
+        #quiz-overall-feedback {
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .feedback-overall-correct {
+            background-color: #e6ffe6; /* Light green for correct */
+            color: #006600; /* Dark green text */
+        }
+
+        .feedback-overall-incorrect {
+            background-color: #ffe6e6; /* Light red for incorrect */
+            color: #cc0000; /* Dark red text */
+        }
+
+        .feedback-overall-partial {
+            background-color: #fffacd; /* Light yellow for partial */
+            color: #cc6600; /* Orange text */
+        }
+
+        /* --- RESPONSIVENESS --- */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .ebook-wrapper {
+                height: 90vh; /* More vertical space on smaller devices */
+            }
+            .ebook-page {
+                padding: 20px;
+            }
+            h1 { font-size: 1.8em; }
+            h2 { font-size: 1.4em; }
+            h3 { font-size: 1.1em; }
+            p, li { font-size: 0.95em; }
+            .nav-button {
+                padding: 10px 20px;
+                font-size: 0.9em;
+            }
+            .cover-title { font-size: 2.2em; }
+            .cover-subtitle { font-size: 1.2em; }
+        }
+
+        @media (max-width: 480px) {
+            .ebook-page {
+                padding: 15px;
+            }
+            h1 { font-size: 1.5em; }
+            h2 { font-size: 1.2em; }
+            h3 { font-size: 1em; }
+            p, li { font-size: 0.9em; }
+            .nav-button {
+                padding: 8px 15px;
+                font-size: 0.8em;
+            }
+            .cover-title { font-size: 1.8em; }
+            .cover-subtitle { font-size: 1em; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="ebook-wrapper">
+        <div id="page-0" class="ebook-page cover-page">
+            <div>
+                <h1 class="cover-title">Data Types & Variables in C</h1>
+                <h2 class="cover-subtitle">A Beginner's Guide</h2>
+                <p class="cover-author">By Vinner</p>
+            </div>
+            <div class="page-number">0 / 9</div>
+        </div>
+        
+        <div id="page-1" class="ebook-page">
+            <h2>Table of Contents</h2>
+            <ul>
+                <li><a href="#chapter1">Chapter 1: The Building Blocks</a></li>
+                <li><a href="#section1-1">1.1 Understanding Basic Data Types</a></li>
+                <li><a href="#section1-2">1.2 Data Type Modifiers</a></li>
+                <li><a href="#section1-3">1.3 Declaring & Naming Variables</a></li>
+                <li><a href="#section1-4">1.4 Constants</a></li>
+                <li><a href="#section1-5">1.5 Basic Arithmetic Operators</a></li>
+                <li><a href="#section1-6">1.6 A Simple C Program</a></li>
+                <li><a href="#quiz-start">Self-Assessment Quiz</a></li>
+                <li><a href="#back-cover">Thank You / Back Cover</a></li>
+            </ul>
+            <div class="page-number">1 / 9</div>
+        </div>
+
+        <div id="page-2" class="ebook-page">
+            <h2 id="chapter1">Chapter 1: The Building Blocks</h2>
+            <p>Welcome to C programming! Before we write complex programs, we need the fundamental building blocks: <strong>data types</strong> and <strong>variables</strong>. Think of data types as categories for information, and variables as labeled containers to store it.</p>
+            <h3 id="section1-1">1.1 Understanding Basic Data Types</h3>
+            <p>In C, every piece of data has a specific type which tells the compiler how much memory to allocate. The primary types are:</p>
+            <ul>
+                <li><code>int</code>: Stores whole numbers (e.g., 10, -50).</li>
+                <li><code>float</code>: Stores single-precision decimal numbers (e.g., 3.14).</li>
+                <li><code>double</code>: Stores double-precision (more accurate) decimal numbers.</li>
+                <li><code>char</code>: Stores single characters (e.g., 'A', '$').</li>
+            </ul>
+            <div class="page-number">2 / 9</div>
+        </div>
+
+        <div id="page-3" class="ebook-page">
+            <h2 id="section1-2">1.2 Data Type Modifiers</h2>
+            <p>You can modify the range of basic data types using modifiers. Common ones are <code>short</code>, <code>long</code>, and <code>unsigned</code>.</p>
+            <ul>
+                <li><code>short int</code>: Uses less memory than <code>int</code>, for smaller numbers.</li>
+                <li><code>long int</code>: Can store larger integer values. <code>long long int</code> can store even larger values.</li>
+                <li><code>unsigned int</code>: Can only store positive numbers, but its maximum positive value is roughly twice that of a standard <code>int</code>.</li>
+            </ul>
+            <div class="sidebar">
+                <h4 class="sidebar-title">DIY: Inspecting Data Sizes</h4>
+                <p>Use the <code>sizeof()</code> operator to see how much memory each data type occupies on your system. Example: <code>printf("Size of int: %zu bytes\n", sizeof(int));</code></p>
+            </div>
+            <div class="page-number">3 / 9</div>
+        </div>
+
+        <div id="page-4" class="ebook-page">
+            <h2 id="section1-3">1.3 Declaring & Naming Variables</h2>
+            <p>A <strong>variable</strong> is a name for a memory location. You must declare its type before use. It's best practice to also initialize it with a starting value to avoid "garbage" data.</p>
+            <h3>Variable Naming Rules</h3>
+            <ul>
+                <li>Names can contain letters, digits, and underscores.</li>
+                <li>Names must begin with a letter or an underscore.</li>
+                <li>Names are case-sensitive (<code>age</code> and <code>Age</code> are different).</li>
+                <li>Keywords like <code>int</code> or <code>while</code> cannot be used as names.</li>
+            </ul>
+            <div class="page-number">4 / 9</div>
+        </div>
+        
+        <div id="page-5" class="ebook-page">
+            <h2 id="section1-4">1.4 Constants</h2>
+            <p>A constant is a value that cannot be altered by the program. In C, you define constants using the <code>const</code> keyword. This makes your code safer and easier to understand by preventing accidental changes to important values.</p>
+            <div class="code-block"><pre><code>const float PI = 3.14159;
+// PI = 3.14; // This line would cause a compile error!</code></pre></div>
+            <div class="sidebar">
+                <h4 class="sidebar-title">DIY: Uninitialized Variables</h4>
+                <p>Declare an integer but don't initialize it. Print its value. What do you see? This is a "garbage value".</p>
+            </div>
+            <div class="page-number">5 / 9</div>
+        </div>
+
+        <div id="page-6" class="ebook-page">
+            <h2 id="section1-5">1.5 Basic Arithmetic Operators</h2>
+            <p>C provides a rich set of operators. Here are the basic arithmetic operators:</p>
+            <ul>
+                <li><code>+</code> (Addition)</li>
+                <li><code>-</code> (Subtraction)</li>
+                <li><code>*</code> (Multiplication)</li>
+                <li><code>/</code> (Division)</li>
+                <li><code>%</code> (Modulus - gives the remainder of a division)</li>
+            </ul>
+            <div class="code-block"><pre><code>int a = 10;
+int b = 3;
+int sum = a + b;     // 13
+int remainder = a % b; // 1</code></pre></div>
+            <div class="page-number">6 / 9</div>
+        </div>
+
+        <div id="page-7" class="ebook-page">
+            <h2 id="section1-6">1.6 A Simple C Program</h2>
+            <p>This program demonstrates these concepts, using <code>printf()</code> to display formatted output. The <code>%d</code> and <code>%.2f</code> are called format specifiers.</p>
+            <div class="code-block"><pre><code>#include &lt;stdio.h&gt;
+
+int main() {
+  int quantity = 5;
+  float unitPrice = 2.50;
+  float totalCost = quantity * unitPrice;
+
+  printf("Total for %d items is: $%.2f\n", quantity, totalCost);
+  return 0;
+}</code></pre></div>
+            <div class="sidebar">
+                <h4 class="sidebar-title">DIY: Modify the Program</h4>
+                <p>Change the values of <code>quantity</code> and <code>unitPrice</code> and predict the output.</p>
+            </div>
+            <div class="page-number">7 / 9</div>
+        </div>
+
+        <div id="page-8" class="ebook-page">
+            <h2 id="quiz-start">Self-Assessment Quiz</h2>
+            <form id="quiz-form">
+                <div class="quiz-question" data-question="q1">
+                    <p><strong>1. What is the primary purpose of the <code>int</code> data type in C?</strong> <span class="feedback-icon" id="q1-feedback"></span></p>
+                    <label><input type="radio" name="q1" value="a"> To store single characters.</label><br>
+                    <label><input type="radio" name="q1" value="b"> To store decimal numbers.</label><br>
+                    <label><input type="radio" name="q1" value="c"> To store whole numbers.</label><br>
+                    <label><input type="radio" name="q1" value="d"> To store true/false values.</label>
+                </div>
+
+                <div class="quiz-question" data-question="q2">
+                    <p><strong>2. Which keyword is used to declare a constant in C?</strong> <span class="feedback-icon" id="q2-feedback"></span></p>
+                    <label><input type="radio" name="q2" value="a"> `var`</label><br>
+                    <label><input type="radio" name="q2" value="b"> `static`</label><br>
+                    <label><input type="radio" name="q2" value="c"> `const`</label><br>
+                    <label><input type="radio" name="q2" value="d"> `final`</label>
+                </div>
+
+                <div class="quiz-question" data-question="q3">
+                    <p><strong>3. The modulus operator (<code>%</code>) returns the ___________ of a division.</strong> <span class="feedback-icon" id="q3-feedback"></span></p>
+                    <input type="text" name="q3" placeholder="Your answer here">
+                </div>
+
+                <div class="quiz-question" data-question="q4">
+                    <p><strong>4. Is `_myVariable` a valid variable name in C? (Yes/No)</strong> <span class="feedback-icon" id="q4-feedback"></span></p>
+                    <label><input type="radio" name="q4" value="yes"> Yes</label><br>
+                    <label><input type="radio" name="q4" value="no"> No</label>
+                </div>
+
+                <button type="button" id="submit-quiz-btn" class="nav-button" style="margin-top: 20px;">Check Answers</button>
+                <button type="button" id="reset-quiz-btn" class="nav-button" style="margin-top: 20px; margin-left: 10px; background-color: #6c757d;">Reset Quiz</button>
+            </form>
+            <div id="quiz-overall-feedback"></div>
+            <div class="page-number">8 / 9</div>
+        </div>
+
+        <div id="page-9" class="ebook-page back-cover">
+            <div id="back-cover">
+                <h2>Thank You for Reading!</h2>
+                <p>This concludes the chapter on Data Types and Variables in C.</p>
+                <p>We hope this guide has been helpful in starting your C programming journey.</p>
+                <p>Stay tuned for more chapters on C programming...</p>
+                <p style="font-size:0.9em; margin-top:30px; color:#555;">&copy; 2025 Vinner. All rights reserved.</p>
+            </div>
+            <div class="page-number">9 / 9</div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <button id="prev-btn" class="nav-button">PREVIOUS</button>
+        <button id="next-btn" class="nav-button">NEXT</button>
+    </div>
+
+    <script>
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const pages = document.querySelectorAll('.ebook-page');
+        let currentPage = 0; // Start at cover page
+
+        // --- Core Page Flipping Logic ---
+        function goNextPage() {
+            if (currentPage >= pages.length - 1) return;
+            pages[currentPage].classList.add('flipped');
+            currentPage++;
+            updateButtons();
+        }
+
+        function goPrevPage() {
+            if (currentPage <= 0) return;
+            currentPage--;
+            pages[currentPage].classList.remove('flipped');
+            updateButtons();
+        }
+
+        function updateButtons() {
+            prevBtn.disabled = currentPage === 0;
+            nextBtn.disabled = currentPage === pages.length - 1;
+        }
+
+        function initializeBook() {
+            // Set initial z-index for stacking effect
+            pages.forEach((page, index) => {
+                page.style.zIndex = pages.length - index;
+            });
+            
+            nextBtn.addEventListener('click', goNextPage);
+            prevBtn.addEventListener('click', goPrevPage);
+
+            updateButtons();
+        }
+
+        // --- Table of Contents Navigation ---
+        function goToPage(pageIndex, elementToScrollToId = null) {
+            if (pageIndex < 0 || pageIndex >= pages.length) return;
+
+            // Determine direction and flip pages accordingly
+            if (pageIndex > currentPage) {
+                for (let i = currentPage; i < pageIndex; i++) {
+                    pages[i].classList.add('flipped');
+                }
+            } else if (pageIndex < currentPage) {
+                for (let i = currentPage - 1; i >= pageIndex; i--) {
+                    pages[i].classList.remove('flipped');
+                }
+            }
+            currentPage = pageIndex;
+            updateButtons();
+
+            // If a specific element ID is provided, scroll to it after the flip animation
+            if (elementToScrollToId) {
+                setTimeout(() => {
+                    const targetElement = document.getElementById(elementToScrollToId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }, 600); // Give time for page flip animation
+            }
+        }
+
+        // Event listeners for TOC links
+        document.querySelectorAll('#page-1 a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const href = this.getAttribute('href');
+                const targetId = href.substring(1); // e.g., "chapter1"
+                
+                // Find the page index that contains the target ID
+                let targetPageIndex = -1;
+                let elementToScrollTo = null;
+
+                for (let i = 0; i < pages.length; i++) {
+                    const page = pages[i];
+                    if (page.id === targetId || page.querySelector(`#${targetId}`)) {
+                        targetPageIndex = i;
+                        elementToScrollTo = targetId; // Set the ID to scroll to
+                        break;
+                    }
+                }
+
+                if (targetPageIndex !== -1) {
+                    goToPage(targetPageIndex, elementToScrollTo);
+                }
+            });
+        });
+
+        // --- Quiz Logic ---
+        const submitQuizBtn = document.getElementById('submit-quiz-btn');
+        const resetQuizBtn = document.getElementById('reset-quiz-btn');
+        const quizOverallFeedback = document.getElementById('quiz-overall-feedback');
+        const quizForm = document.getElementById('quiz-form');
+        const quizQuestions = document.querySelectorAll('.quiz-question'); // All question containers
+
+        const correctAnswers = {
+            q1: 'c', // To store whole numbers.
+            q2: 'c', // const
+            q3: 'remainder', // Case-insensitive for text input
+            q4: 'yes' // Yes, it's valid
+        };
+
+        submitQuizBtn.addEventListener('click', checkQuizAnswers);
+        resetQuizBtn.addEventListener('click', resetQuiz);
+
+        function checkQuizAnswers() {
+            let score = 0;
+            let totalQuestions = 0;
+            let allCorrect = true;
+
+            quizQuestions.forEach(qDiv => {
+                const questionName = qDiv.dataset.question; // Get the 'q1', 'q2' etc.
+                const feedbackIcon = qDiv.querySelector('.feedback-icon');
+                feedbackIcon.innerHTML = ''; // Clear previous icon
+                feedbackIcon.className = 'feedback-icon'; // Reset class
+
+                totalQuestions++;
+                let userAnswer;
+                let isCorrect = false;
+
+                if (questionName === 'q3') { // Text input
+                    const inputElement = quizForm.elements[questionName];
+                    userAnswer = inputElement.value.trim().toLowerCase();
+                    if (userAnswer === correctAnswers[questionName]) {
+                        isCorrect = true;
+                    } else {
+                        // Show correct answer for text input
+                        inputElement.style.border = '1px solid #dc3545'; // Red border
+                        let correctSpan = inputElement.nextElementSibling; // Check if span already exists
+                        if (!correctSpan || !correctSpan.classList.contains('correct-answer-hint')) {
+                            correctSpan = document.createElement('span');
+                            correctSpan.classList.add('correct-answer-hint');
+                            inputElement.after(correctSpan); // Insert after the input
+                        }
+                        correctSpan.style.color = '#28a745';
+                        correctSpan.style.fontSize = '0.9em';
+                        correctSpan.style.marginLeft = '10px';
+                        correctSpan.innerHTML = `(Correct: "${correctAnswers[questionName]}")`;
+                    }
+                } else { // Radio buttons
+                    const selectedOption = quizForm.elements[questionName].value;
+                    userAnswer = selectedOption;
+
+                    if (userAnswer === correctAnswers[questionName]) {
+                        isCorrect = true;
+                    } else {
+                        // Highlight correct radio option
+                        const labels = qDiv.querySelectorAll('label');
+                        labels.forEach(label => {
+                            if (label.querySelector(`input[value="${correctAnswers[questionName]}"]`)) {
+                                label.style.fontWeight = 'bold';
+                                label.style.color = '#28a745'; // Green for correct answer
+                            } else if (label.querySelector(`input[value="${userAnswer}"]`)) {
+                                label.style.color = '#dc3545'; // Red for incorrect selected answer
+                            }
+                        });
+                    }
+                }
+
+                if (isCorrect) {
+                    score++;
+                    feedbackIcon.classList.add('correct');
+                    feedbackIcon.innerHTML = '&#10003;'; // Checkmark
+                } else {
+                    allCorrect = false;
+                    feedbackIcon.classList.add('incorrect');
+                    feedbackIcon.innerHTML = '&#10007;'; // X mark
+                }
+            });
+
+            // Overall feedback
+            if (allCorrect) {
+                quizOverallFeedback.className = 'feedback-overall-correct';
+                quizOverallFeedback.innerHTML = `Excellent! You got ${score} out of ${totalQuestions} correct!`;
+            } else if (score > 0) {
+                quizOverallFeedback.className = 'feedback-overall-partial';
+                quizOverallFeedback.innerHTML = `Good effort! You got ${score} out of ${totalQuestions} correct. Keep reviewing!`;
+            } else {
+                quizOverallFeedback.className = 'feedback-overall-incorrect';
+                quizOverallFeedback.innerHTML = `You got ${score} out of ${totalQuestions} correct. Time to review the chapter!`;
+            }
+
+            // Disable all inputs and buttons after submission (except reset)
+            const inputs = quizForm.querySelectorAll('input, button');
+            inputs.forEach(input => {
+                if (input.id !== 'reset-quiz-btn') {
+                    input.disabled = true;
+                }
+            });
+        }
+
+        function resetQuiz() {
+            quizForm.reset(); // Clear all form inputs
+            quizOverallFeedback.innerHTML = ''; // Clear overall feedback message
+            quizOverallFeedback.className = ''; // Remove feedback classes
+
+            // Re-enable inputs and buttons
+            const inputs = quizForm.querySelectorAll('input, button');
+            inputs.forEach(input => {
+                input.disabled = false;
+            });
+
+            // Clear per-question feedback icons and styling
+            quizQuestions.forEach(qDiv => {
+                const feedbackIcon = qDiv.querySelector('.feedback-icon');
+                feedbackIcon.innerHTML = '';
+                feedbackIcon.className = 'feedback-icon'; // Reset class
+
+                // Reset specific styling for incorrect answers
+                const inputElement = qDiv.querySelector('input[type="text"]');
+                if (inputElement) {
+                    inputElement.style.border = ''; // Remove red border
+                    const correctHint = qDiv.querySelector('.correct-answer-hint');
+                    if (correctHint) {
+                        correctHint.remove();
+                    }
+                }
+
+                const labels = qDiv.querySelectorAll('label');
+                labels.forEach(label => {
+                    label.style.fontWeight = '';
+                    label.style.color = '';
+                });
+            });
+        }
+
+
+        // Initialize the ebook
+        initializeBook();
+
+    </script>
+</body>
+</html>
